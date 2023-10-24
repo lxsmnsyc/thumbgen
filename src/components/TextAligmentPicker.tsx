@@ -9,7 +9,7 @@ export interface TextAlignmentPickerProps {
   onChange: (value?: TextAlignment) => void;
 }
 
-export function getTextAlignmentStyle(alignment: TextAlignment): string {
+export function getTextAlignmentLayoutStyle(alignment: TextAlignment): string {
   switch (alignment) {
     case 'left':
       return 'items-start';
@@ -17,6 +17,17 @@ export function getTextAlignmentStyle(alignment: TextAlignment): string {
       return 'items-center';
     case 'right':
       return 'items-end';
+  }
+}
+
+export function getTextAlignmentContentStyle(alignment: TextAlignment): string {
+  switch (alignment) {
+    case 'left':
+      return 'text-left';
+    case 'middle':
+      return 'text-center';
+    case 'right':
+      return 'text-right';
   }
 }
 

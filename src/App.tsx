@@ -3,7 +3,7 @@ import * as htmlToImage from 'html-to-image';
 import GradientPicker, { getGradient } from './components/GradientPicker';
 import FontPicker, { Font, getFontStyle } from './components/FontPicker';
 import { classNames } from './utils/classnames';
-import TextAlignmentPicker, { TextAlignment, getTextAlignmentStyle } from './components/TextAligmentPicker';
+import TextAlignmentPicker, { TextAlignment, getTextAlignmentContentStyle, getTextAlignmentLayoutStyle } from './components/TextAligmentPicker';
 import LogoAlignmentPicker, { LogoAlignment, getLogoAlignmentStyle } from './components/LogoAligmentPicker';
 import BlendModePicker, { BlendMode } from './components/BlendModePicker';
 import download from './utils/download';
@@ -329,7 +329,7 @@ export default function App(): JSX.Element {
           <div
             class={classNames(
               'flex flex-col gap-2 justify-center w-full h-full',
-              getTextAlignmentStyle(textAlignment),
+              getTextAlignmentLayoutStyle(textAlignment),
             )}
             style={{
               color: color,
@@ -337,7 +337,8 @@ export default function App(): JSX.Element {
           >
             <h1
               class={classNames(
-                getFontStyle(titleFont)
+                getFontStyle(titleFont),
+                getTextAlignmentContentStyle(textAlignment),
               )}
               style={{
                 'font-size': `${titleSize}rem`,
@@ -347,7 +348,8 @@ export default function App(): JSX.Element {
             </h1>
             <div
               class={classNames(
-                getFontStyle(descriptionFont)
+                getFontStyle(descriptionFont),
+                getTextAlignmentContentStyle(textAlignment),
               )}
               style={{
                 'font-size': `${descriptionSize}rem`,
