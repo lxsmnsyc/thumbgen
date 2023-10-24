@@ -1,5 +1,6 @@
 import { JSX } from 'solid-js';
 import { classNames } from '../utils/classnames';
+// https://github.com/itmeo/webgradients
 import gradients from '../gradients.json';
 
 interface GradientStop {
