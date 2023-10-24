@@ -7,6 +7,7 @@ import TextAlignmentPicker, { TextAlignment, getTextAlignmentContentStyle, getTe
 import LogoAlignmentPicker, { LogoAlignment, getLogoAlignmentStyle } from './components/LogoAligmentPicker';
 import BlendModePicker, { BlendMode } from './components/BlendModePicker';
 import download from './utils/download';
+import { ColorPicker } from './components/ColorPicker';
 
 export default function App(): JSX.Element {
   let image = $signal<HTMLElement>();
@@ -256,18 +257,7 @@ export default function App(): JSX.Element {
             >
               Text
             </label>
-            <div class="flex flex-row gap-1 items-center justify-center">
-              <input
-                type="text"
-                name="text-color"
-                class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6"
-                value={color}
-                onInput={(e) => {
-                  color = e.target.value;
-                }}
-              />
-              <div class="w-8 h-8 block border" style={{'background-color': color}} />
-            </div>
+            <ColorPicker value={color} onChange={$set(color)} />
           </div>
           <div>
             <label
