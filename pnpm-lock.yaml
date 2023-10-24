@@ -18,8 +18,8 @@ dependencies:
     specifier: ^0.16.0
     version: 0.16.0(@babel/core@7.23.2)(solid-js@1.8.3)
   terracotta:
-    specifier: ^1.0.1
-    version: 1.0.1(solid-js@1.8.3)
+    specifier: ^1.0.2
+    version: 1.0.2(solid-js@1.8.3)
 
 devDependencies:
   autoprefixer:
@@ -3166,8 +3166,8 @@ packages:
     engines: {node: '>=6'}
     dev: true
 
-  /terracotta@1.0.1(solid-js@1.8.3):
-    resolution: {integrity: sha512-CZI7ZJE/hib7FRp9VlLFtVybFq/2Swla/5o/RUADuiS2YkRruiXQcU3Cvi6/L1xrUX+but2U4qj585lYC4/9kQ==}
+  /terracotta@1.0.2(solid-js@1.8.3):
+    resolution: {integrity: sha512-h4JyrPmwXi7iTJl/slaT0t/xIFMRb4dKebWMhoj/FD93kkfvY8USmQYnJx+vrJXx/NyCb0S0/Ii2o/WJCOUxuQ==}
     engines: {node: '>=10'}
     peerDependencies:
       solid-js: ^1.8

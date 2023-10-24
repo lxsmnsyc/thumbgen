@@ -26,6 +26,6 @@
     "html-to-image": "^1.11.11",
     "solid-js": "^1.8.3",
     "solid-labels": "^0.16.0",
-    "terracotta": "^1.0.1"
+    "terracotta": "^1.0.2"
   }
 }
