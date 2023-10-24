@@ -8,6 +8,7 @@ import LogoAlignmentPicker, { LogoAlignment, getLogoAlignmentStyle } from './com
 import BlendModePicker, { BlendMode } from './components/BlendModePicker';
 import download from './utils/download';
 import { ColorPicker } from './components/ColorPicker';
+import { GithubIcon } from './components/icons';
 
 export default function App(): JSX.Element {
   let image = $signal<HTMLElement>();
@@ -39,7 +40,12 @@ export default function App(): JSX.Element {
   return (
     <div class="flex flex-row w-screen h-screen overflow-hidden">
       <div class="w-1/3 flex flex-col gap-4 p-8 overflow-y-auto">
-        <h1 class="text-4xl">ThumbGen</h1>
+        <div class="flex flex-row gap-1 items-center justify-center">
+          <h1 class="text-4xl">ThumbGen</h1>
+          <a href="https://github.com/lxsmnsyc/thumbgen">
+            <GithubIcon class="w-8 h-8 text-black" />
+          </a>
+        </div>
         <div class="flex flex-col gap-2">
           <h2 class="text-xl">Details</h2>
           <div class="flex flex-col gap-2">
