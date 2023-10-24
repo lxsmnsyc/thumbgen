@@ -9,6 +9,7 @@ import BlendModePicker, { BlendMode } from './components/BlendModePicker';
 import download from './utils/download';
 import { ColorPicker } from './components/ColorPicker';
 import { GithubIcon } from './components/icons';
+import FontWeightPicker, { FontWeight, getFontWeightStyle } from './components/FontWeightPicker';
 
 export default function App(): JSX.Element {
   let image = $signal<HTMLElement>();
@@ -27,7 +28,9 @@ export default function App(): JSX.Element {
   let textAlignment = $signal<TextAlignment>('left');
   let logoAlignment = $signal<LogoAlignment>('TL');
   let color = $signal('#000');
-  let blendMode = $signal<BlendMode>('hue')
+  let blendMode = $signal<BlendMode>('hue');
+  let titleWeight = $signal<FontWeight>('Bold');
+  let descriptionWeight = $signal<FontWeight>('Normal');
 
   const getBackground = () => {
     const gradient = getGradient(gradientIndex);
@@ -253,6 +256,27 @@ export default function App(): JSX.Element {
             <TextAlignmentPicker value={textAlignment} onChange={$set(textAlignment)} />
             <LogoAlignmentPicker value={logoAlignment} onChange={$set(logoAlignment)} />
           </div>
+          <div class="flex flex-col gap-2">
+            <h3 class="text-lg">Font Weight</h3>
+            <div class="flex flex-col gap-2">
+              <label
+                for="title-font"
+                class="block text-sm font-medium leading-6 text-gray-900"
+              >
+                Title
+              </label>
+              <FontWeightPicker value={titleWeight} onChange={$set(titleWeight)} />
+            </div>
+            <div class="flex flex-col gap-2">
+              <label
+                for="description-font"
+                class="block text-sm font-medium leading-6 text-gray-900"
+              >
+                Description
+              </label>
+              <FontWeightPicker value={descriptionWeight} onChange={$set(descriptionWeight)} />
+            </div>
+          </div>
         </div>
         <div class="flex flex-col gap-2">
           <h2 class="text-xl">Colors</h2>
@@ -334,6 +358,7 @@ export default function App(): JSX.Element {
               class={classNames(
                 getFontStyle(titleFont),
                 getTextAlignmentContentStyle(textAlignment),
+                getFontWeightStyle(titleWeight),
               )}
               style={{
                 'font-size': `${titleSize}rem`,
@@ -345,6 +370,7 @@ export default function App(): JSX.Element {
               class={classNames(
                 getFontStyle(descriptionFont),
                 getTextAlignmentContentStyle(textAlignment),
+                getFontWeightStyle(descriptionWeight),
               )}
               style={{
                 'font-size': `${descriptionSize}rem`,
