@@ -1,2 +1,2 @@
-# my-poster-generator
+# thumbgen
  
