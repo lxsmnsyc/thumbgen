@@ -38,8 +38,8 @@ export default function App(): JSX.Element {
   };
 
   return (
-    <div class="flex flex-row w-screen h-screen overflow-hidden">
-      <div class="w-1/3 flex flex-col gap-4 p-8 overflow-y-auto">
+    <div class="flex flex-col-reverse lg:flex-row w-screen h-screen overflow-hidden">
+      <div class="w-full lg:w-1/3 flex flex-col gap-4 p-8 overflow-y-auto">
         <div class="flex flex-row gap-1 items-center justify-center">
           <h1 class="text-4xl">ThumbGen</h1>
           <a href="https://github.com/lxsmnsyc/thumbgen">
@@ -306,11 +306,11 @@ export default function App(): JSX.Element {
           Download
         </button>
       </div>
-      <div class="relative w-2/3 h-screen flex items-center justify-center">
+      <div class="relative w-full h-[25vh] lg:w-2/3 lg:h-screen flex items-center justify-center">
         <div
           ref={$set(image)}
           class={classNames(
-            'p-8',
+            'p-8 scale-[0.25] lg:scale-50',
             background && 'bg-cover bg-center',
           )}
           style={{
@@ -319,7 +319,6 @@ export default function App(): JSX.Element {
             'background-image': getBackground(),
             'background-blend-mode': blendMode,
             'aspect-ratio': `${width} / ${height}`,
-            transform: `scale(0.5)`
           }}
         >
           <div
