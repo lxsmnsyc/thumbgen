@@ -27,7 +27,7 @@ export default function App(): JSX.Element {
   let textAlignment = $signal<TextAlignment>('left');
   let logoAlignment = $signal<LogoAlignment>('TL');
   let color = $signal('#000');
-  let blendMode = $signal<BlendMode>('normal')
+  let blendMode = $signal<BlendMode>('hue')
 
   const getBackground = () => {
     const gradient = getGradient(gradientIndex);
