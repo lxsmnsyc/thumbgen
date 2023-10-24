@@ -22,7 +22,6 @@ function convertGradientData(data: GradientData): string {
     color += `, ${item.color} ${item.pos}%`;
   }
   const result = `linear-gradient(${data.deg}deg, ${color})`
-  console.log(result);
   return result;
 }
 
