@@ -1,5 +1,5 @@
 import type { JSX } from 'solid-js';
-import { Show, createEffect, createSignal, onCleanup } from 'solid-js';
+import { Show, createEffect, createMemo, createSignal, onCleanup } from 'solid-js';
 import { createStore, produce } from 'solid-js/store';
 import * as htmlToImage from 'html-to-image';
 import GradientPicker, { getGradient } from './components/GradientPicker';
@@ -16,10 +16,14 @@ import ColorPicker from './components/ColorPicker';
 import { GithubIcon } from './components/icons';
 import FontWeightPicker, { getFontWeightStyle } from './components/FontWeightPicker';
 import { NumberField, TextField } from './components/Field';
+import SizePresetPicker from './components/SizePresetPicker';
+import createElementSize from './utils/element-size';
 import { DEFAULT_STATE, type PosterState, loadState, saveState } from './state';
 
 const SAVE_DELAY = 300;
 const COPIED_DURATION = 2000;
+// Space kept between the preview and the edges of its pane, in pixels.
+const PREVIEW_MARGIN = 32;
 
 const SECONDARY_BUTTON_CLASS =
   'flex-1 rounded-md bg-white px-3.5 py-2.5 text-sm font-semibold text-gray-900 shadow-xs ring-1 ring-inset ring-gray-300 hover:bg-gray-50';
@@ -29,6 +33,18 @@ export default function App(): JSX.Element {
   const [state, setState] = createStore<PosterState>(loadState());
   const [exportError, setExportError] = createSignal('');
   const [copied, setCopied] = createSignal(false);
+  const [paneSize, paneRef] = createElementSize();
+
+  // Fits the whole poster in the preview pane without enlarging it.
+  const previewScale = createMemo(() => {
+    const pane = paneSize();
+    const scale = Math.min(
+      (pane.width - PREVIEW_MARGIN * 2) / state.width,
+      (pane.height - PREVIEW_MARGIN * 2) / state.height,
+      1,
+    );
+    return Math.max(scale, 0.01);
+  });
 
   // Returns a change handler that writes one field of the state.
   const update =
@@ -103,7 +119,7 @@ export default function App(): JSX.Element {
 
   return (
     <div class="flex flex-col-reverse lg:flex-row w-screen h-screen overflow-hidden">
-      <div class="w-full lg:w-1/3 flex flex-col gap-4 p-8 overflow-y-auto">
+      <div class="w-full min-h-0 flex-1 lg:flex-none lg:w-1/3 flex flex-col gap-4 p-8 overflow-y-auto">
         <div class="flex flex-row gap-1 items-center justify-center">
           <h1 class="text-4xl">ThumbGen</h1>
           <a href="https://github.com/lxsmnsyc/thumbgen" aria-label="Source on GitHub">
@@ -135,6 +151,13 @@ export default function App(): JSX.Element {
           <h2 class="text-xl">Appearance</h2>
           <div class="flex flex-col gap-2">
             <h3 class="text-lg">Sizes</h3>
+            <SizePresetPicker
+              width={state.width}
+              height={state.height}
+              onChange={(width, height) => {
+                setState({ width, height });
+              }}
+            />
             <div class="flex flex-row gap-2">
               <NumberField
                 label="Width"
@@ -247,21 +270,22 @@ export default function App(): JSX.Element {
           </p>
         </Show>
       </div>
-      <div class="relative w-full h-[25vh] lg:w-2/3 lg:h-screen flex items-center justify-center">
+      <div
+        ref={paneRef}
+        class="relative w-full h-[35vh] shrink-0 lg:shrink lg:w-2/3 lg:h-screen flex items-center justify-center overflow-hidden bg-gray-100"
+      >
         <div
           ref={(el) => {
             image = el;
           }}
-          class={classNames(
-            'relative p-8 scale-[0.25] lg:scale-50',
-            state.background && 'bg-cover bg-center',
-          )}
+          class={classNames('relative p-8 shrink-0', state.background && 'bg-cover bg-center')}
           style={{
             width: `${state.width}px`,
             height: `${state.height}px`,
             'background-image': getBackground(),
             'background-blend-mode': state.blendMode,
             'aspect-ratio': `${state.width} / ${state.height}`,
+            scale: String(previewScale()),
           }}
         >
           <div
@@ -310,6 +334,9 @@ export default function App(): JSX.Element {
             />
           </Show>
         </div>
+        <p class="absolute bottom-2 right-3 text-xs text-gray-500" aria-live="polite">
+          {state.width} × {state.height} · {Math.round(previewScale() * 100)}%
+        </p>
       </div>
     </div>
   );
