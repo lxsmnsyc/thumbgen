@@ -1,5 +1,6 @@
-import { JSX } from "solid-js";
-import { classNames } from "../utils/classnames";
+import type { JSX } from 'solid-js';
+import { For, createSelector } from 'solid-js';
+import classNames from '../utils/classnames';
 
 const COLORS = [
   '#000',
@@ -28,37 +29,39 @@ const COLORS = [
   '#f43f5e',
 ];
 
-
 interface ColorPickerProps {
   value: string;
-  onChange: (color: string) => void
+  onChange: (color: string) => void;
 }
 
-export function ColorPicker(props: ColorPickerProps): JSX.Element {
-  function onChange(color: string) {
+export default function ColorPicker(props: ColorPickerProps): JSX.Element {
+  function onChange(color: string): void {
     props.onChange(color);
   }
 
-  const isSelected = $selector(props.value);
+  const isSelected = createSelector(() => props.value);
   return (
     <div class="flex flex-wrap gap-1">
       <For each={COLORS}>
         {(item) => (
           <button
             class={classNames(
-              'w-8 h-8 rounded',
-              isSelected(item) ? 'border-2 border-blue-500' : 'border border-blue-300'
+              'w-8 h-8 rounded-sm',
+              isSelected(item) ? 'border-2 border-blue-500' : 'border border-blue-300',
             )}
             title={item}
             onClick={[onChange, item]}
-            style={{'background-color': item}}
+            style={{ 'background-color': item }}
           />
         )}
       </For>
       <input
-        class="flex-1 rounded w-full h-8 border-none"
+        class="flex-1 rounded-sm w-full h-8 border-none"
         type="color"
-        onChange={(e) => onChange(e.target.value)} value={props.value}
+        onInput={(e) => {
+          onChange(e.currentTarget.value);
+        }}
+        value={props.value}
       />
     </div>
   );
