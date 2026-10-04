@@ -1,7 +1,6 @@
 import type { JSX } from 'solid-js';
 import { Show, createEffect, createMemo, createSignal, onCleanup } from 'solid-js';
 import { createStore, produce } from 'solid-js/store';
-import * as htmlToImage from 'html-to-image';
 import GradientPicker, { getGradient } from './components/GradientPicker';
 import FontPicker, { getFontStyle } from './components/FontPicker';
 import classNames from './utils/classnames';
@@ -11,7 +10,15 @@ import TextAlignmentPicker, {
 } from './components/TextAligmentPicker';
 import LogoAlignmentPicker, { getLogoAlignmentStyle } from './components/LogoAligmentPicker';
 import BlendModePicker from './components/BlendModePicker';
-import download from './utils/download';
+import {
+  EXPORT_FORMATS,
+  EXPORT_SCALES,
+  type ExportFormat,
+  type ExportScale,
+  copyImage,
+  downloadImage,
+} from './utils/export-image';
+import SelectPicker from './components/SelectPicker';
 import ColorPicker from './components/ColorPicker';
 import { GithubIcon } from './components/icons';
 import FontWeightPicker, { getFontWeightStyle } from './components/FontWeightPicker';
@@ -34,7 +41,10 @@ export default function App(): JSX.Element {
   let image: HTMLDivElement | undefined;
   const [state, setState] = createStore<PosterState>(loadState());
   const [exportError, setExportError] = createSignal('');
-  const [copied, setCopied] = createSignal(false);
+  const [copied, setCopied] = createSignal<'link' | 'image'>();
+  const [exportFormat, setExportFormat] = createSignal<ExportFormat>('PNG');
+  const [exportScale, setExportScale] = createSignal<ExportScale>('1×');
+  const [jpegQuality, setJpegQuality] = createSignal(92);
   const [paneSize, paneRef] = createElementSize();
   const [logoUpload, setLogoFile] = createUpload();
   const [backgroundUpload, setBackgroundFile] = createUpload();
@@ -85,14 +95,33 @@ export default function App(): JSX.Element {
     return gradient;
   };
 
+  const setFormat = (value: ExportFormat): void => {
+    setExportFormat(value);
+  };
+  const setScale = (value: ExportScale): void => {
+    setExportScale(value);
+  };
+  const setQuality = (value: number): void => {
+    setJpegQuality(value);
+  };
+
+  const showCopied = (target: 'link' | 'image'): void => {
+    setCopied(target);
+    setTimeout(() => {
+      setCopied(undefined);
+    }, COPIED_DURATION);
+  };
+
+  const exportFailed = (): void => {
+    setExportError('Failed to export the poster. Remote images must allow cross-origin access.');
+  };
+
   const copyLink = (): void => {
+    setExportError('');
     saveState({ ...state });
     navigator.clipboard.writeText(window.location.href).then(
       () => {
-        setCopied(true);
-        setTimeout(() => {
-          setCopied(false);
-        }, COPIED_DURATION);
+        showCopied('link');
       },
       () => {
         setExportError('Failed to copy the link.');
@@ -101,29 +130,25 @@ export default function App(): JSX.Element {
   };
 
   const exportImage = (): void => {
-    const node = image;
-    if (!node) {
+    if (!image) {
       return;
     }
     setExportError('');
-    // The preview is scaled down with the `scale` property, so reset
-    // it to export the poster at its real size.
-    htmlToImage
-      .toPng(node, {
-        style: {
-          scale: '1',
-        },
-      })
-      .then(
-        (url) => {
-          download(url, 'my-poster.png');
-        },
-        () => {
-          setExportError(
-            'Failed to export the poster. Remote images must allow cross-origin access.',
-          );
-        },
-      );
+    downloadImage(image, state.title, {
+      format: exportFormat(),
+      scale: exportScale(),
+      quality: jpegQuality() / 100,
+    }).catch(exportFailed);
+  };
+
+  const copyImageToClipboard = (): void => {
+    if (!image) {
+      return;
+    }
+    setExportError('');
+    copyImage(image, exportScale()).then(() => {
+      showCopied('image');
+    }, exportFailed);
   };
 
   return (
@@ -254,16 +279,58 @@ export default function App(): JSX.Element {
             onChange={update('gradientIndex')}
           />
         </div>
-        <button
-          type="button"
-          class="rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-xs hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
-          onClick={exportImage}
-        >
-          Download
-        </button>
+        <div class="flex flex-col gap-2">
+          <h2 class="text-xl">Export</h2>
+          <div class="flex flex-row gap-2">
+            <div class="flex-1">
+              <SelectPicker
+                label="Format"
+                options={EXPORT_FORMATS}
+                value={exportFormat()}
+                onChange={setFormat}
+              />
+            </div>
+            <div class="flex-1">
+              <SelectPicker
+                label="Scale"
+                options={EXPORT_SCALES}
+                value={exportScale()}
+                onChange={setScale}
+              />
+            </div>
+          </div>
+          <Show when={exportFormat() === 'JPEG'}>
+            <NumberField
+              inline
+              label="Quality"
+              min={1}
+              max={100}
+              step={1}
+              value={jpegQuality()}
+              onChange={setQuality}
+            />
+          </Show>
+          <Show when={exportFormat() === 'SVG'}>
+            <p class="text-sm text-gray-500">
+              SVG keeps text as text but embeds HTML, so some apps cannot open it.
+            </p>
+          </Show>
+          <div class="flex flex-row gap-2">
+            <button
+              type="button"
+              class="flex-1 rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-xs hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+              onClick={exportImage}
+            >
+              Download
+            </button>
+            <button type="button" class={SECONDARY_BUTTON_CLASS} onClick={copyImageToClipboard}>
+              {copied() === 'image' ? 'Copied!' : 'Copy image'}
+            </button>
+          </div>
+        </div>
         <div class="flex flex-row gap-2">
           <button type="button" class={SECONDARY_BUTTON_CLASS} onClick={copyLink}>
-            {copied() ? 'Copied!' : 'Copy link'}
+            {copied() === 'link' ? 'Copied!' : 'Copy link'}
           </button>
           <button
             type="button"
