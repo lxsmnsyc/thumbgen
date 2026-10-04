@@ -220,31 +220,20 @@ export default function App(): JSX.Element {
           </div>
           <div class="flex flex-col gap-2">
             <h3 class="text-lg">Fonts</h3>
-            <div class="flex flex-col gap-2">
-              <label for="title-font" class="block text-sm font-medium leading-6 text-gray-900">
-                Title
-              </label>
-              <FontPicker
-                value={titleFont()}
-                onChange={(value) => {
-                  setTitleFont(value);
-                }}
-              />
-            </div>
-            <div class="flex flex-col gap-2">
-              <label
-                for="description-font"
-                class="block text-sm font-medium leading-6 text-gray-900"
-              >
-                Description
-              </label>
-              <FontPicker
-                value={descriptionFont()}
-                onChange={(value) => {
-                  setDescriptionFont(value);
-                }}
-              />
-            </div>
+            <FontPicker
+              label="Title"
+              value={titleFont()}
+              onChange={(value) => {
+                setTitleFont(value);
+              }}
+            />
+            <FontPicker
+              label="Description"
+              value={descriptionFont()}
+              onChange={(value) => {
+                setDescriptionFont(value);
+              }}
+            />
           </div>
           <div class="flex flex-col gap-2">
             <h3 class="text-lg">Alignment</h3>
@@ -263,66 +252,45 @@ export default function App(): JSX.Element {
           </div>
           <div class="flex flex-col gap-2">
             <h3 class="text-lg">Font Weight</h3>
-            <div class="flex flex-col gap-2">
-              <label for="title-font" class="block text-sm font-medium leading-6 text-gray-900">
-                Title
-              </label>
-              <FontWeightPicker
-                value={titleWeight()}
-                onChange={(value) => {
-                  setTitleWeight(value);
-                }}
-              />
-            </div>
-            <div class="flex flex-col gap-2">
-              <label
-                for="description-font"
-                class="block text-sm font-medium leading-6 text-gray-900"
-              >
-                Description
-              </label>
-              <FontWeightPicker
-                value={descriptionWeight()}
-                onChange={(value) => {
-                  setDescriptionWeight(value);
-                }}
-              />
-            </div>
+            <FontWeightPicker
+              label="Title"
+              value={titleWeight()}
+              onChange={(value) => {
+                setTitleWeight(value);
+              }}
+            />
+            <FontWeightPicker
+              label="Description"
+              value={descriptionWeight()}
+              onChange={(value) => {
+                setDescriptionWeight(value);
+              }}
+            />
           </div>
         </div>
         <div class="flex flex-col gap-2">
           <h2 class="text-xl">Colors</h2>
-          <div class="flex flex-col gap-2">
-            <label for="color" class="block text-sm font-medium leading-6 text-gray-900">
-              Text
-            </label>
-            <ColorPicker
-              value={color()}
-              onChange={(value) => {
-                setColor(value);
-              }}
-            />
-          </div>
-          <div>
-            <label for="blend-mode" class="block text-sm font-medium leading-6 text-gray-900">
-              Blend Mode
-            </label>
-            <BlendModePicker
-              value={blendMode()}
-              onChange={(value) => {
-                setBlendMode(value);
-              }}
-            />
-          </div>
-          <div>
-            <label class="block text-sm font-medium leading-6 text-gray-900">Background</label>
-            <GradientPicker
-              value={gradientIndex()}
-              onChange={(value) => {
-                setGradientIndex(value);
-              }}
-            />
-          </div>
+          <ColorPicker
+            label="Text"
+            value={color()}
+            onChange={(value) => {
+              setColor(value);
+            }}
+          />
+          <BlendModePicker
+            label="Blend Mode"
+            value={blendMode()}
+            onChange={(value) => {
+              setBlendMode(value);
+            }}
+          />
+          <GradientPicker
+            label="Background"
+            value={gradientIndex()}
+            onChange={(value) => {
+              setGradientIndex(value);
+            }}
+          />
         </div>
         <button
           type="button"

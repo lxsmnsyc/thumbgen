@@ -1,5 +1,5 @@
 import type { JSX } from 'solid-js';
-import { For, createSelector } from 'solid-js';
+import { For, createSelector, createUniqueId } from 'solid-js';
 import classNames from '../utils/classnames';
 
 const COLORS = [
@@ -30,6 +30,7 @@ const COLORS = [
 ];
 
 interface ColorPickerProps {
+  label: string;
   value: string;
   onChange: (color: string) => void;
 }
@@ -39,30 +40,40 @@ export default function ColorPicker(props: ColorPickerProps): JSX.Element {
     props.onChange(color);
   }
 
+  const labelId = createUniqueId();
   const isSelected = createSelector(() => props.value);
   return (
-    <div class="flex flex-wrap gap-1">
-      <For each={COLORS}>
-        {(item) => (
-          <button
-            class={classNames(
-              'w-8 h-8 rounded-sm',
-              isSelected(item) ? 'border-2 border-blue-500' : 'border border-blue-300',
-            )}
-            title={item}
-            onClick={[onChange, item]}
-            style={{ 'background-color': item }}
-          />
-        )}
-      </For>
-      <input
-        class="flex-1 rounded-sm w-full h-8 border-none"
-        type="color"
-        onInput={(e) => {
-          onChange(e.currentTarget.value);
-        }}
-        value={props.value}
-      />
+    <div class="flex flex-col gap-2">
+      <span id={labelId} class="block text-sm font-medium leading-6 text-gray-900">
+        {props.label}
+      </span>
+      <div role="group" aria-labelledby={labelId} class="flex flex-wrap gap-1">
+        <For each={COLORS}>
+          {(item) => (
+            <button
+              type="button"
+              aria-label={item}
+              aria-pressed={isSelected(item)}
+              class={classNames(
+                'w-8 h-8 rounded-sm',
+                isSelected(item) ? 'border-2 border-blue-500' : 'border border-blue-300',
+              )}
+              title={item}
+              onClick={[onChange, item]}
+              style={{ 'background-color': item }}
+            />
+          )}
+        </For>
+        <input
+          class="flex-1 rounded-sm w-full h-8 border-none"
+          type="color"
+          aria-label="Custom color"
+          onInput={(e) => {
+            onChange(e.currentTarget.value);
+          }}
+          value={props.value}
+        />
+      </div>
     </div>
   );
 }
