@@ -16,6 +16,8 @@ import ColorPicker from './components/ColorPicker';
 import { GithubIcon } from './components/icons';
 import FontWeightPicker, { getFontWeightStyle } from './components/FontWeightPicker';
 import { NumberField, TextField } from './components/Field';
+import ImageField from './components/ImageField';
+import createUpload from './utils/upload';
 import SizePresetPicker from './components/SizePresetPicker';
 import createElementSize from './utils/element-size';
 import { DEFAULT_STATE, type PosterState, loadState, saveState } from './state';
@@ -34,6 +36,12 @@ export default function App(): JSX.Element {
   const [exportError, setExportError] = createSignal('');
   const [copied, setCopied] = createSignal(false);
   const [paneSize, paneRef] = createElementSize();
+  const [logoUpload, setLogoFile] = createUpload();
+  const [backgroundUpload, setBackgroundFile] = createUpload();
+
+  // Uploaded files take the place of the URLs from the state.
+  const logo = (): string => logoUpload()?.url ?? state.logo;
+  const background = (): string => backgroundUpload()?.url ?? state.background;
 
   // Fits the whole poster in the preview pane without enlarging it.
   const previewScale = createMemo(() => {
@@ -70,8 +78,9 @@ export default function App(): JSX.Element {
 
   const getBackground = (): string => {
     const gradient = getGradient(state.gradientIndex);
-    if (state.background) {
-      return `${gradient}, url(${JSON.stringify(state.background)})`;
+    const url = background();
+    if (url) {
+      return `${gradient}, url(${JSON.stringify(url)})`;
     }
     return gradient;
   };
@@ -134,17 +143,19 @@ export default function App(): JSX.Element {
             value={state.description}
             onChange={update('description')}
           />
-          <TextField
+          <ImageField
             label="Logo"
-            placeholder="https://"
-            value={state.logo}
-            onChange={update('logo')}
+            url={state.logo}
+            upload={logoUpload()}
+            onUrlChange={update('logo')}
+            onFileChange={setLogoFile}
           />
-          <TextField
+          <ImageField
             label="Background Image"
-            placeholder="https://"
-            value={state.background}
-            onChange={update('background')}
+            url={state.background}
+            upload={backgroundUpload()}
+            onUrlChange={update('background')}
+            onFileChange={setBackgroundFile}
           />
         </div>
         <div class="flex flex-col gap-3">
@@ -264,6 +275,11 @@ export default function App(): JSX.Element {
             Reset
           </button>
         </div>
+        <Show when={logoUpload() ?? backgroundUpload()}>
+          <p class="text-sm text-gray-500">
+            Uploaded images are not saved or included in the link.
+          </p>
+        </Show>
         <Show when={exportError()}>
           <p class="text-sm text-red-600" role="alert">
             {exportError()}
@@ -278,7 +294,7 @@ export default function App(): JSX.Element {
           ref={(el) => {
             image = el;
           }}
-          class={classNames('relative p-8 shrink-0', state.background && 'bg-cover bg-center')}
+          class={classNames('relative p-8 shrink-0', background() && 'bg-cover bg-center')}
           style={{
             width: `${state.width}px`,
             height: `${state.height}px`,
@@ -322,10 +338,10 @@ export default function App(): JSX.Element {
               {state.description}
             </div>
           </div>
-          <Show when={state.logo}>
+          <Show when={logo()}>
             <img
               class={classNames('absolute m-8', getLogoAlignmentStyle(state.logoAlignment))}
-              src={state.logo}
+              src={logo()}
               style={{
                 'aspect-ratio': '1 / 1',
                 width: `${state.logoSize}rem`,
