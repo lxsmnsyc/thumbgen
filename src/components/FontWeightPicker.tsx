@@ -12,7 +12,7 @@ export type FontWeight =
   | 'Extra Bold'
   | 'Black';
 
-const OPTIONS: readonly FontWeight[] = [
+export const FONT_WEIGHTS: readonly FontWeight[] = [
   'Thin',
   'Extra Light',
   'Light',
@@ -50,7 +50,7 @@ export default function FontWeightPicker(props: FontWeightPickerProps): JSX.Elem
   return (
     <SelectPicker
       label={props.label}
-      options={OPTIONS}
+      options={FONT_WEIGHTS}
       value={props.value}
       onChange={(value) => {
         props.onChange(value);

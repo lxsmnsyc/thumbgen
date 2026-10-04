@@ -26,8 +26,12 @@ interface GradientPickerProps {
   onChange: (value: number) => void;
 }
 
+const GRADIENTS = gradients as GradientData[];
+
+export const GRADIENT_COUNT = GRADIENTS.length;
+
 export function getGradient(value: number): string {
-  return convertGradientData((gradients as GradientData[])[value]);
+  return convertGradientData(GRADIENTS[value]);
 }
 
 export default function GradientPicker(props: GradientPickerProps): JSX.Element {
@@ -39,7 +43,7 @@ export default function GradientPicker(props: GradientPickerProps): JSX.Element 
         {props.label}
       </span>
       <div role="group" aria-labelledby={labelId} class="flex flex-row flex-wrap gap-1">
-        {(gradients as GradientData[]).map((item, index) => (
+        {GRADIENTS.map((item, index) => (
           <button
             type="button"
             aria-pressed={isSelected(index)}

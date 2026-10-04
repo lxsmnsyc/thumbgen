@@ -21,7 +21,7 @@ export function getLogoAlignmentStyle(alignment: LogoAlignment): string {
   return LOGO_ALIGNMENT_STYLES[alignment];
 }
 
-const alignments: LogoAlignment[] = ['TL', 'TR', 'BL', 'BR'];
+export const LOGO_ALIGNMENTS: readonly LogoAlignment[] = ['TL', 'TR', 'BL', 'BR'];
 
 export default function LogoAlignmentPicker(props: LogoAlignmentPickerProps): JSX.Element {
   return (
@@ -38,7 +38,7 @@ export default function LogoAlignmentPicker(props: LogoAlignmentPickerProps): JS
         <>
           <RadioGroupLabel class="">Logo</RadioGroupLabel>
           <div class="flex flex-row">
-            <For each={alignments}>
+            <For each={LOGO_ALIGNMENTS}>
               {(item) => (
                 <RadioGroupOption
                   value={item}

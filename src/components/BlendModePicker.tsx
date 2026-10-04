@@ -19,7 +19,7 @@ export type BlendMode =
   | 'color'
   | 'luminosity';
 
-const OPTIONS: readonly BlendMode[] = [
+export const BLEND_MODES: readonly BlendMode[] = [
   'normal',
   'multiply',
   'screen',
@@ -48,7 +48,7 @@ export default function BlendModePicker(props: BlendModePickerProps): JSX.Elemen
   return (
     <SelectPicker
       label={props.label}
-      options={OPTIONS}
+      options={BLEND_MODES}
       value={props.value}
       onChange={(value) => {
         props.onChange(value);

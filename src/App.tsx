@@ -1,56 +1,104 @@
 import type { JSX } from 'solid-js';
-import { Show, createSignal } from 'solid-js';
+import { Show, createEffect, createSignal, onCleanup } from 'solid-js';
+import { createStore, produce } from 'solid-js/store';
 import * as htmlToImage from 'html-to-image';
 import GradientPicker, { getGradient } from './components/GradientPicker';
-import FontPicker, { type Font, getFontStyle } from './components/FontPicker';
+import FontPicker, { getFontStyle } from './components/FontPicker';
 import classNames from './utils/classnames';
 import TextAlignmentPicker, {
-  type TextAlignment,
   getTextAlignmentContentStyle,
   getTextAlignmentLayoutStyle,
 } from './components/TextAligmentPicker';
-import LogoAlignmentPicker, {
-  type LogoAlignment,
-  getLogoAlignmentStyle,
-} from './components/LogoAligmentPicker';
-import BlendModePicker, { type BlendMode } from './components/BlendModePicker';
+import LogoAlignmentPicker, { getLogoAlignmentStyle } from './components/LogoAligmentPicker';
+import BlendModePicker from './components/BlendModePicker';
 import download from './utils/download';
-import numberInput from './utils/number-input';
 import ColorPicker from './components/ColorPicker';
 import { GithubIcon } from './components/icons';
-import FontWeightPicker, {
-  type FontWeight,
-  getFontWeightStyle,
-} from './components/FontWeightPicker';
+import FontWeightPicker, { getFontWeightStyle } from './components/FontWeightPicker';
+import { NumberField, TextField } from './components/Field';
+import { DEFAULT_STATE, type PosterState, loadState, saveState } from './state';
+
+const SAVE_DELAY = 300;
+const COPIED_DURATION = 2000;
+
+const SECONDARY_BUTTON_CLASS =
+  'flex-1 rounded-md bg-white px-3.5 py-2.5 text-sm font-semibold text-gray-900 shadow-xs ring-1 ring-inset ring-gray-300 hover:bg-gray-50';
 
 export default function App(): JSX.Element {
   let image: HTMLDivElement | undefined;
-  const [title, setTitle] = createSignal('My title');
-  const [description, setDescription] = createSignal('My description');
-  const [logo, setLogo] = createSignal('');
-  const [background, setBackground] = createSignal('');
-  const [width, setWidth] = createSignal(1280);
-  const [height, setHeight] = createSignal(640);
-  const [gradientIndex, setGradientIndex] = createSignal(0);
-  const [titleSize, setTitleSize] = createSignal(6);
-  const [descriptionSize, setDescriptionSize] = createSignal(4);
-  const [logoSize, setLogoSize] = createSignal(8);
-  const [titleFont, setTitleFont] = createSignal<Font>('Mono');
-  const [descriptionFont, setDescriptionFont] = createSignal<Font>('Mono');
-  const [textAlignment, setTextAlignment] = createSignal<TextAlignment>('left');
-  const [logoAlignment, setLogoAlignment] = createSignal<LogoAlignment>('TL');
-  const [color, setColor] = createSignal('#000');
-  const [blendMode, setBlendMode] = createSignal<BlendMode>('hue');
-  const [titleWeight, setTitleWeight] = createSignal<FontWeight>('Bold');
-  const [descriptionWeight, setDescriptionWeight] = createSignal<FontWeight>('Normal');
+  const [state, setState] = createStore<PosterState>(loadState());
   const [exportError, setExportError] = createSignal('');
+  const [copied, setCopied] = createSignal(false);
+
+  // Returns a change handler that writes one field of the state.
+  const update =
+    <K extends keyof PosterState>(key: K) =>
+    (value: PosterState[K]): void => {
+      setState(
+        produce((draft) => {
+          draft[key] = value;
+        }),
+      );
+    };
+
+  // Saves to the URL and local storage after edits settle.
+  createEffect(() => {
+    const snapshot = { ...state };
+    const timeout = setTimeout(() => {
+      saveState(snapshot);
+    }, SAVE_DELAY);
+    onCleanup(() => {
+      clearTimeout(timeout);
+    });
+  });
 
   const getBackground = (): string => {
-    const gradient = getGradient(gradientIndex());
-    if (background()) {
-      return `${gradient}, url(${background()})`;
+    const gradient = getGradient(state.gradientIndex);
+    if (state.background) {
+      return `${gradient}, url(${JSON.stringify(state.background)})`;
     }
     return gradient;
+  };
+
+  const copyLink = (): void => {
+    saveState({ ...state });
+    navigator.clipboard.writeText(window.location.href).then(
+      () => {
+        setCopied(true);
+        setTimeout(() => {
+          setCopied(false);
+        }, COPIED_DURATION);
+      },
+      () => {
+        setExportError('Failed to copy the link.');
+      },
+    );
+  };
+
+  const exportImage = (): void => {
+    const node = image;
+    if (!node) {
+      return;
+    }
+    setExportError('');
+    // The preview is scaled down with the `scale` property, so reset
+    // it to export the poster at its real size.
+    htmlToImage
+      .toPng(node, {
+        style: {
+          scale: '1',
+        },
+      })
+      .then(
+        (url) => {
+          download(url, 'my-poster.png');
+        },
+        () => {
+          setExportError(
+            'Failed to export the poster. Remote images must allow cross-origin access.',
+          );
+        },
+      );
   };
 
   return (
@@ -58,271 +106,141 @@ export default function App(): JSX.Element {
       <div class="w-full lg:w-1/3 flex flex-col gap-4 p-8 overflow-y-auto">
         <div class="flex flex-row gap-1 items-center justify-center">
           <h1 class="text-4xl">ThumbGen</h1>
-          <a href="https://github.com/lxsmnsyc/thumbgen">
+          <a href="https://github.com/lxsmnsyc/thumbgen" aria-label="Source on GitHub">
             <GithubIcon class="w-8 h-8 text-black" />
           </a>
         </div>
         <div class="flex flex-col gap-2">
           <h2 class="text-xl">Details</h2>
-          <div class="flex flex-col gap-2">
-            <label for="title" class="block text-sm font-medium leading-6 text-gray-900">
-              Title
-            </label>
-            <div>
-              <input
-                type="text"
-                id="title"
-                name="title"
-                class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-xs ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6"
-                value={title()}
-                onInput={(e) => {
-                  setTitle(e.target.value);
-                }}
-              />
-            </div>
-          </div>
-          <div class="flex flex-col gap-2">
-            <label for="description" class="block text-sm font-medium leading-6 text-gray-900">
-              Description
-            </label>
-            <div class="">
-              <input
-                type="text"
-                id="description"
-                name="description"
-                class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-xs ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6"
-                value={description()}
-                onInput={(e) => {
-                  setDescription(e.target.value);
-                }}
-              />
-            </div>
-          </div>
-          <div class="flex flex-col gap-2">
-            <label for="logo" class="block text-sm font-medium leading-6 text-gray-900">
-              Logo
-            </label>
-            <div class="">
-              <input
-                type="text"
-                id="logo"
-                name="logo"
-                class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-xs ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6"
-                value={logo()}
-                onInput={(e) => {
-                  setLogo(e.target.value);
-                }}
-              />
-            </div>
-          </div>
-          <div class="flex flex-col gap-2">
-            <label for="background-image" class="block text-sm font-medium leading-6 text-gray-900">
-              Background Image
-            </label>
-            <div class="">
-              <input
-                type="text"
-                id="background-image"
-                name="background-image"
-                class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-xs ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6"
-                value={background()}
-                onInput={(e) => {
-                  setBackground(e.target.value);
-                }}
-              />
-            </div>
-          </div>
+          <TextField label="Title" value={state.title} onChange={update('title')} />
+          <TextField
+            label="Description"
+            value={state.description}
+            onChange={update('description')}
+          />
+          <TextField
+            label="Logo"
+            placeholder="https://"
+            value={state.logo}
+            onChange={update('logo')}
+          />
+          <TextField
+            label="Background Image"
+            placeholder="https://"
+            value={state.background}
+            onChange={update('background')}
+          />
         </div>
         <div class="flex flex-col gap-3">
           <h2 class="text-xl">Appearance</h2>
           <div class="flex flex-col gap-2">
             <h3 class="text-lg">Sizes</h3>
             <div class="flex flex-row gap-2">
-              <div class="flex-1">
-                <label for="width" class="block text-sm font-medium leading-6 text-gray-900">
-                  Width
-                </label>
-                <div class="">
-                  <input
-                    type="number"
-                    id="width"
-                    name="width"
-                    class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-xs ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6"
-                    value={width()}
-                    onInput={numberInput(setWidth)}
-                  />
-                </div>
-              </div>
-              <div class="flex-1">
-                <label for="height" class="block text-sm font-medium leading-6 text-gray-900">
-                  Height
-                </label>
-                <div class="">
-                  <input
-                    type="number"
-                    id="height"
-                    name="height"
-                    class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-xs ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6"
-                    value={height()}
-                    onInput={numberInput(setHeight)}
-                  />
-                </div>
-              </div>
+              <NumberField
+                label="Width"
+                min={1}
+                max={8192}
+                step={1}
+                value={state.width}
+                onChange={update('width')}
+              />
+              <NumberField
+                label="Height"
+                min={1}
+                max={8192}
+                step={1}
+                value={state.height}
+                onChange={update('height')}
+              />
             </div>
-            <div class="flex flex-row items-center justify-between">
-              <label for="title-size" class="block text-sm font-medium leading-6 text-gray-900">
-                Title
-              </label>
-              <div class="">
-                <input
-                  type="number"
-                  id="title-size"
-                  name="title-size"
-                  class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-xs ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6"
-                  value={titleSize()}
-                  onInput={numberInput(setTitleSize)}
-                />
-              </div>
-            </div>
-            <div class="flex flex-row items-center justify-between">
-              <label
-                for="description-size"
-                class="block text-sm font-medium leading-6 text-gray-900"
-              >
-                Description
-              </label>
-              <div class="">
-                <input
-                  type="number"
-                  id="description-size"
-                  name="description-size"
-                  class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-xs ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6"
-                  value={descriptionSize()}
-                  onInput={numberInput(setDescriptionSize)}
-                />
-              </div>
-            </div>
-            <div class="flex flex-row items-center justify-between">
-              <label for="logo-size" class="block text-sm font-medium leading-6 text-gray-900">
-                Logo
-              </label>
-              <div class="">
-                <input
-                  type="number"
-                  id="logo-size"
-                  name="logo-size"
-                  class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-xs ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6"
-                  value={logoSize()}
-                  onInput={numberInput(setLogoSize)}
-                />
-              </div>
-            </div>
+            <NumberField
+              inline
+              label="Title"
+              min={0}
+              max={100}
+              value={state.titleSize}
+              onChange={update('titleSize')}
+            />
+            <NumberField
+              inline
+              label="Description"
+              min={0}
+              max={100}
+              value={state.descriptionSize}
+              onChange={update('descriptionSize')}
+            />
+            <NumberField
+              inline
+              label="Logo"
+              min={0}
+              max={100}
+              value={state.logoSize}
+              onChange={update('logoSize')}
+            />
           </div>
           <div class="flex flex-col gap-2">
             <h3 class="text-lg">Fonts</h3>
-            <FontPicker
-              label="Title"
-              value={titleFont()}
-              onChange={(value) => {
-                setTitleFont(value);
-              }}
-            />
+            <FontPicker label="Title" value={state.titleFont} onChange={update('titleFont')} />
             <FontPicker
               label="Description"
-              value={descriptionFont()}
-              onChange={(value) => {
-                setDescriptionFont(value);
-              }}
+              value={state.descriptionFont}
+              onChange={update('descriptionFont')}
             />
           </div>
           <div class="flex flex-col gap-2">
             <h3 class="text-lg">Alignment</h3>
-            <TextAlignmentPicker
-              value={textAlignment()}
-              onChange={(value) => {
-                setTextAlignment(value);
-              }}
-            />
-            <LogoAlignmentPicker
-              value={logoAlignment()}
-              onChange={(value) => {
-                setLogoAlignment(value);
-              }}
-            />
+            <TextAlignmentPicker value={state.textAlignment} onChange={update('textAlignment')} />
+            <LogoAlignmentPicker value={state.logoAlignment} onChange={update('logoAlignment')} />
           </div>
           <div class="flex flex-col gap-2">
             <h3 class="text-lg">Font Weight</h3>
             <FontWeightPicker
               label="Title"
-              value={titleWeight()}
-              onChange={(value) => {
-                setTitleWeight(value);
-              }}
+              value={state.titleWeight}
+              onChange={update('titleWeight')}
             />
             <FontWeightPicker
               label="Description"
-              value={descriptionWeight()}
-              onChange={(value) => {
-                setDescriptionWeight(value);
-              }}
+              value={state.descriptionWeight}
+              onChange={update('descriptionWeight')}
             />
           </div>
         </div>
         <div class="flex flex-col gap-2">
           <h2 class="text-xl">Colors</h2>
-          <ColorPicker
-            label="Text"
-            value={color()}
-            onChange={(value) => {
-              setColor(value);
-            }}
-          />
+          <ColorPicker label="Text" value={state.color} onChange={update('color')} />
           <BlendModePicker
             label="Blend Mode"
-            value={blendMode()}
-            onChange={(value) => {
-              setBlendMode(value);
-            }}
+            value={state.blendMode}
+            onChange={update('blendMode')}
           />
           <GradientPicker
             label="Background"
-            value={gradientIndex()}
-            onChange={(value) => {
-              setGradientIndex(value);
-            }}
+            value={state.gradientIndex}
+            onChange={update('gradientIndex')}
           />
         </div>
         <button
           type="button"
           class="rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-xs hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
-          onClick={() => {
-            const node = image;
-            if (!node) {
-              return;
-            }
-            setExportError('');
-            // The preview is scaled down with the `scale` property, so reset
-            // it to export the poster at its real size.
-            htmlToImage
-              .toPng(node, {
-                style: {
-                  scale: '1',
-                },
-              })
-              .then(
-                (url) => {
-                  download(url, 'my-poster.png');
-                },
-                () => {
-                  setExportError(
-                    'Failed to export the poster. Remote images must allow cross-origin access.',
-                  );
-                },
-              );
-          }}
+          onClick={exportImage}
         >
           Download
         </button>
+        <div class="flex flex-row gap-2">
+          <button type="button" class={SECONDARY_BUTTON_CLASS} onClick={copyLink}>
+            {copied() ? 'Copied!' : 'Copy link'}
+          </button>
+          <button
+            type="button"
+            class={SECONDARY_BUTTON_CLASS}
+            onClick={() => {
+              setState({ ...DEFAULT_STATE });
+            }}
+          >
+            Reset
+          </button>
+        </div>
         <Show when={exportError()}>
           <p class="text-sm text-red-600" role="alert">
             {exportError()}
@@ -336,58 +254,58 @@ export default function App(): JSX.Element {
           }}
           class={classNames(
             'relative p-8 scale-[0.25] lg:scale-50',
-            background() && 'bg-cover bg-center',
+            state.background && 'bg-cover bg-center',
           )}
           style={{
-            width: `${width()}px`,
-            height: `${height()}px`,
+            width: `${state.width}px`,
+            height: `${state.height}px`,
             'background-image': getBackground(),
-            'background-blend-mode': blendMode(),
-            'aspect-ratio': `${width()} / ${height()}`,
+            'background-blend-mode': state.blendMode,
+            'aspect-ratio': `${state.width} / ${state.height}`,
           }}
         >
           <div
             class={classNames(
               'flex flex-col gap-2 justify-center w-full h-full',
-              getTextAlignmentLayoutStyle(textAlignment()),
+              getTextAlignmentLayoutStyle(state.textAlignment),
             )}
             style={{
-              color: color(),
+              color: state.color,
             }}
           >
             <h1
               class={classNames(
-                getFontStyle(titleFont()),
-                getTextAlignmentContentStyle(textAlignment()),
-                getFontWeightStyle(titleWeight()),
+                getFontStyle(state.titleFont),
+                getTextAlignmentContentStyle(state.textAlignment),
+                getFontWeightStyle(state.titleWeight),
               )}
               style={{
-                'font-size': `${titleSize()}rem`,
+                'font-size': `${state.titleSize}rem`,
               }}
             >
-              {title()}
+              {state.title}
             </h1>
             <div
               class={classNames(
-                getFontStyle(descriptionFont()),
-                getTextAlignmentContentStyle(textAlignment()),
-                getFontWeightStyle(descriptionWeight()),
+                getFontStyle(state.descriptionFont),
+                getTextAlignmentContentStyle(state.textAlignment),
+                getFontWeightStyle(state.descriptionWeight),
               )}
               style={{
-                'font-size': `${descriptionSize()}rem`,
+                'font-size': `${state.descriptionSize}rem`,
               }}
             >
-              {description()}
+              {state.description}
             </div>
           </div>
-          <Show when={logo()}>
+          <Show when={state.logo}>
             <img
-              class={classNames('absolute m-8', getLogoAlignmentStyle(logoAlignment()))}
-              src={logo()}
+              class={classNames('absolute m-8', getLogoAlignmentStyle(state.logoAlignment))}
+              src={state.logo}
               style={{
                 'aspect-ratio': '1 / 1',
-                width: `${logoSize()}rem`,
-                height: `${logoSize()}rem`,
+                width: `${state.logoSize}rem`,
+                height: `${state.logoSize}rem`,
               }}
             />
           </Show>

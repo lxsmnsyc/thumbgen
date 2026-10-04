@@ -3,7 +3,7 @@ import SelectPicker from './SelectPicker';
 
 export type Font = 'Mono' | 'Serif' | 'Sans';
 
-const OPTIONS: readonly Font[] = ['Mono', 'Serif', 'Sans'];
+export const FONTS: readonly Font[] = ['Mono', 'Serif', 'Sans'];
 
 export interface FontPickerProps {
   label: string;
@@ -25,7 +25,7 @@ export default function FontPicker(props: FontPickerProps): JSX.Element {
   return (
     <SelectPicker
       label={props.label}
-      options={OPTIONS}
+      options={FONTS}
       value={props.value}
       onChange={(value) => {
         props.onChange(value);

@@ -30,7 +30,7 @@ export function getTextAlignmentContentStyle(alignment: TextAlignment): string {
   return TEXT_ALIGNMENT_CONTENT_STYLES[alignment];
 }
 
-const alignments: TextAlignment[] = ['left', 'middle', 'right'];
+export const TEXT_ALIGNMENTS: readonly TextAlignment[] = ['left', 'middle', 'right'];
 
 const titles: Record<TextAlignment, string> = {
   left: 'Left',
@@ -53,7 +53,7 @@ export default function TextAlignmentPicker(props: TextAlignmentPickerProps): JS
         <>
           <RadioGroupLabel class="">Text</RadioGroupLabel>
           <div class="flex flex-row">
-            <For each={alignments}>
+            <For each={TEXT_ALIGNMENTS}>
               {(item) => (
                 <RadioGroupOption
                   value={item}
