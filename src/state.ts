@@ -24,6 +24,9 @@ export interface PosterState {
   blendMode: BlendMode;
   titleWeight: FontWeight;
   descriptionWeight: FontWeight;
+  letterSpacing: number;
+  lineHeight: number;
+  textShadow: boolean;
 }
 
 export const DEFAULT_STATE: Readonly<PosterState> = {
@@ -45,6 +48,9 @@ export const DEFAULT_STATE: Readonly<PosterState> = {
   blendMode: 'hue',
   titleWeight: 'Bold',
   descriptionWeight: 'Normal',
+  letterSpacing: 0,
+  lineHeight: 1.5,
+  textShadow: false,
 };
 
 const STORAGE_KEY = 'thumbgen:state';
@@ -71,6 +77,16 @@ function number(min: number, max: number, integer = false): Parser<number> {
     }
     return value;
   };
+}
+
+function boolean(raw: unknown): boolean | undefined {
+  if (raw === true || raw === 'true') {
+    return true;
+  }
+  if (raw === false || raw === 'false') {
+    return false;
+  }
+  return undefined;
 }
 
 function oneOf<T extends string>(options: readonly T[]): Parser<T> {
@@ -102,6 +118,9 @@ const PARSERS: { [K in keyof PosterState]: Parser<PosterState[K]> } = {
   blendMode: oneOf(BLEND_MODES),
   titleWeight: oneOf(FONT_WEIGHTS),
   descriptionWeight: oneOf(FONT_WEIGHTS),
+  letterSpacing: number(-0.2, 1),
+  lineHeight: number(0.5, 3),
+  textShadow: boolean,
 };
 
 const KEYS: readonly (keyof PosterState)[] = [
@@ -123,6 +142,9 @@ const KEYS: readonly (keyof PosterState)[] = [
   'blendMode',
   'titleWeight',
   'descriptionWeight',
+  'letterSpacing',
+  'lineHeight',
+  'textShadow',
 ];
 
 function setField<K extends keyof PosterState>(

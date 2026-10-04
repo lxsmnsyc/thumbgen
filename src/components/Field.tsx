@@ -81,3 +81,29 @@ export function NumberField(props: NumberFieldProps): JSX.Element {
     </div>
   );
 }
+
+export interface CheckboxFieldProps {
+  label: string;
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+}
+
+export function CheckboxField(props: CheckboxFieldProps): JSX.Element {
+  const id = createUniqueId();
+  return (
+    <div class="flex flex-row items-center gap-2">
+      <input
+        type="checkbox"
+        id={id}
+        class="h-4 w-4 rounded-sm border-gray-300 text-blue-600 focus:ring-blue-600"
+        checked={props.checked}
+        onChange={(e) => {
+          props.onChange(e.currentTarget.checked);
+        }}
+      />
+      <label for={id} class={LABEL_CLASS}>
+        {props.label}
+      </label>
+    </div>
+  );
+}

@@ -45,6 +45,8 @@ function getFileName(title: string, format: ExportFormat): string {
 }
 
 async function render(node: HTMLElement, options: ExportOptions): Promise<string> {
+  // Waits for web fonts so the image does not use a fallback font.
+  await document.fonts.ready;
   const renderOptions = getRenderOptions(options.scale);
   switch (options.format) {
     case 'JPEG':
@@ -67,11 +69,13 @@ export async function downloadImage(
 
 export async function copyImage(node: HTMLElement, scale: ExportScale): Promise<void> {
   // Passes the pending blob to ClipboardItem so Safari keeps the user gesture.
-  const blob = htmlToImage.toBlob(node, getRenderOptions(scale)).then((result) => {
-    if (!result) {
-      throw new Error('Failed to render the poster.');
-    }
-    return result;
-  });
+  const blob = document.fonts.ready
+    .then(async () => htmlToImage.toBlob(node, getRenderOptions(scale)))
+    .then((result) => {
+      if (!result) {
+        throw new Error('Failed to render the poster.');
+      }
+      return result;
+    });
   await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
 }

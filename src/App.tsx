@@ -2,7 +2,7 @@ import type { JSX } from 'solid-js';
 import { Show, createEffect, createMemo, createSignal, onCleanup } from 'solid-js';
 import { createStore, produce } from 'solid-js/store';
 import GradientPicker, { getGradient } from './components/GradientPicker';
-import FontPicker, { getFontStyle } from './components/FontPicker';
+import FontPicker, { getFontFamily, loadFont } from './components/FontPicker';
 import classNames from './utils/classnames';
 import TextAlignmentPicker, {
   getTextAlignmentContentStyle,
@@ -22,7 +22,7 @@ import SelectPicker from './components/SelectPicker';
 import ColorPicker from './components/ColorPicker';
 import { GithubIcon } from './components/icons';
 import FontWeightPicker, { getFontWeightStyle } from './components/FontWeightPicker';
-import { NumberField, TextField } from './components/Field';
+import { CheckboxField, NumberField, TextField } from './components/Field';
 import ImageField from './components/ImageField';
 import createUpload from './utils/upload';
 import SizePresetPicker from './components/SizePresetPicker';
@@ -33,6 +33,7 @@ const SAVE_DELAY = 300;
 const COPIED_DURATION = 2000;
 // Space kept between the preview and the edges of its pane, in pixels.
 const PREVIEW_MARGIN = 32;
+const TEXT_SHADOW = '0 0.05em 0.25em rgb(0 0 0 / 0.5)';
 
 const SECONDARY_BUTTON_CLASS =
   'flex-1 rounded-md bg-white px-3.5 py-2.5 text-sm font-semibold text-gray-900 shadow-xs ring-1 ring-inset ring-gray-300 hover:bg-gray-50';
@@ -74,6 +75,11 @@ export default function App(): JSX.Element {
         }),
       );
     };
+
+  createEffect(() => {
+    loadFont(state.titleFont);
+    loadFont(state.descriptionFont);
+  });
 
   // Saves to the URL and local storage after edits settle.
   createEffect(() => {
@@ -264,6 +270,32 @@ export default function App(): JSX.Element {
               onChange={update('descriptionWeight')}
             />
           </div>
+          <div class="flex flex-col gap-2">
+            <h3 class="text-lg">Text</h3>
+            <NumberField
+              inline
+              label="Letter spacing (em)"
+              min={-0.2}
+              max={1}
+              step={0.01}
+              value={state.letterSpacing}
+              onChange={update('letterSpacing')}
+            />
+            <NumberField
+              inline
+              label="Line height"
+              min={0.5}
+              max={3}
+              step={0.1}
+              value={state.lineHeight}
+              onChange={update('lineHeight')}
+            />
+            <CheckboxField
+              label="Text shadow"
+              checked={state.textShadow}
+              onChange={update('textShadow')}
+            />
+          </div>
         </div>
         <div class="flex flex-col gap-2">
           <h2 class="text-xl">Colors</h2>
@@ -378,15 +410,18 @@ export default function App(): JSX.Element {
             )}
             style={{
               color: state.color,
+              'letter-spacing': `${state.letterSpacing}em`,
+              'line-height': String(state.lineHeight),
+              'text-shadow': state.textShadow ? TEXT_SHADOW : undefined,
             }}
           >
             <h1
               class={classNames(
-                getFontStyle(state.titleFont),
                 getTextAlignmentContentStyle(state.textAlignment),
                 getFontWeightStyle(state.titleWeight),
               )}
               style={{
+                'font-family': getFontFamily(state.titleFont),
                 'font-size': `${state.titleSize}rem`,
               }}
             >
@@ -394,11 +429,11 @@ export default function App(): JSX.Element {
             </h1>
             <div
               class={classNames(
-                getFontStyle(state.descriptionFont),
                 getTextAlignmentContentStyle(state.textAlignment),
                 getFontWeightStyle(state.descriptionWeight),
               )}
               style={{
+                'font-family': getFontFamily(state.descriptionFont),
                 'font-size': `${state.descriptionSize}rem`,
               }}
             >
